@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>💰 БОЛЬШАЯ ДЕНЕЖНАЯ ПОЛКА | Твой личный банк</title>
+    <style>
+        /* ===== ОСНОВНЫЕ СТИЛИ ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        /* Светлая тема (по умолчанию) */
+        :root {
+            --bg-color: #f0f2f5;
+            --text-color: #1a1a1a;
+            --card-bg: #ffffff;
+            --shelf-bg: #8b4513;
+            --shelf-shadow: #5a2e0c;
+            --shelf-content: #deb887;
+            --balance-bg: linear-gradient(45deg, #2193b0, #6dd5ed);
+            --button-bg: #4CAF50;
+            --button-withdraw: #f44336;
+            --button-reset: #ff9800;
+            --history-bg: #f8f9fa;
+            --border-color: #ddd;
+        }
+        
+        /* Темная тема */
+        body.dark-theme {
+            --bg-color: #1a1a1a;
+            --text-color: #ffffff;
+            --card-bg: #2d2d2d;
+            --shelf-bg: #654321;
+            --shelf-shadow: #3a2a0f;
+            --shelf-content: #8b6b4d;
+            --balance-bg: linear-gradient(45deg, #0f4c5c, #2c3e50);
+            --button-bg: #2e7d32;
+            --button-withdraw: #b71c1c;
+            --button-reset: #bf5e00;
+            --history-bg: #363636;
+            --border-color: #444;
+        }
+        
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .app-container {
+            max-width: 1200px;
+            width: 100%;
+        }
+        
+        /* ===== ШАПКА ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo h1 {
+            font-size: 2.2em;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+        
+        .theme-toggle {
+            background: var(--card-bg);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1.1em;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            color: var(--text-color);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* ===== ОСНОВНАЯ СЕТКА ===== */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        
+        /* ===== КАРТОЧКИ ===== */
+        .card {
+            background: var(--card-bg);
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .card-title {
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            color: var(--text-color);
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* ===== ДЕНЕЖНАЯ ПОЛКА (3D ЭФФЕКТ) ===== */
+        .shelf-3d {
+            background: var(--shelf-bg);
+            padding: 25px;
+            border-radius: 15px 15px 8px 8px;
+            position: relative;
+            margin: 20px 0 30px;
+            box-shadow: 0 15px 0 var(--shelf-shadow);
+            transform: perspective(500px) rotateX(2deg);
+        }
+        
+        .shelf-3d::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 0;
+            width: 100%;
+            height: 15px;
+            background: #a0522d;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .shelf-3d::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 5%;
+            width: 90%;
+            height: 30px;
+            background: rgba(0,0,0,0.3);
+            filter: blur(10px);
+            border-radius: 50%;
+            z-index: -1;
+        }
+        
+        .shelf-content {
+            min-height: 200px;
+            background: var(--shelf-content);
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* Купюры с разными стилями */
+        .banknote {
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.2em;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+            transform: rotate(var(--rot, -2deg)) translateY(var(--y, 0));
+            animation: float 3s ease-in-out infinite;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .banknote:hover {
+            transform: rotate(0deg) scale(1.1) translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: rotate(var(--rot, -2deg)) translateY(0); }
+            50% { transform: rotate(var(--rot, -2deg)) translateY(-5px); }
+        }
+        
+        /* Разные цвета купюр */
+        .banknote-1000 { background: #28a745; color: white; --rot: -3deg; }
+        .banknote-2000 { background: #ffc107; color: #333; --rot: 2deg; }
+        .banknote-5000 { background: #17a2b8; color: white; --rot: -1deg; }
+        .banknote-100 { background: #dc3545; color: white; --rot: 3deg; }
+        .banknote-coin { 
+            background: linear-gradient(135deg, #ffd700, #ffa500); 
+            color: #333; 
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 0 #b8860b;
+        }
+        
+        /* ===== БАЛАНС ===== */
+        .balance-big {
+            background: var(--balance-bg);
+            border-radius: 20px;
+            padding: 25px;
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .balance-label {
+            font-size: 1.2em;
+            opacity: 0.9;
+            letter-spacing: 2px;
+        }
+        
+        .balance-amount {
+            font-size: 4em;
+            font-weight: 800;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+            line-height: 1.2;
+            word-break: break-word;
+        }
+        
+        .currency-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        
+        .currency-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .currency-btn.active {
+            background: white;
+            color: #2193b0;
+        }
+        
+        /* ===== КНОПКИ ===== */
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            border: none;
+            padding: 18px;
+            border-radius: 15px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: white;
+            border-bottom: 4px solid rgba(0,0,0,0.2);
+        }
+        
+        .btn:active {
+            transform: translateY(2px);
+            border-bottom-width: 2px;
+        }
+        
+        .btn-green { background: var(--button-bg); }
+        .btn-red { background: var(--button-withdraw); }
+        .btn-orange { background: var(--button-reset); }
+        .btn-blue { background: #007bff; }
+        .btn-purple { background: #6f42c1; }
+        
+        .btn-large {
+            grid-column: span 2;
+            padding: 20px;
+            font-size: 1.3em;
+        }
+        
+        /* ===== ПРОГРЕСС БАР ===== */
+        .goal-progress {
+            margin: 20px 0;
+        }
+        
+        .goal-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .progress-bar {
+            height: 20px;
+            background: var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            border-radius: 10px;
+            transition: width 0.5s;
+            width: 0%;
+        }
+        
+        /* ===== ИСТОРИЯ ===== */
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .history-item {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .profit { color: #28a745; font-weight: 700; }
+        .loss { color: #dc3545; font-weight: 700; }
+        
+        /* ===== СТАТИСТИКА ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            background: var(--history-bg);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+        
+        /* ===== ГРАФИК ===== */
+        .chart-container {
+            margin: 20px 0;
+            height: 150px;
+            display: flex;
+            align-items: flex-end;
+            gap: 5px;
+        }
+        
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(to top, #4CAF50, #8BC34A);
+            border-radius: 5px 5px 0 0;
+            min-height: 3px;
+            transition: height 0.5s;
+            position: relative;
+        }
+        
+        .chart-bar::after {
+            content: attr(data-value);
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8em;
+            color: var(--text-color);
+        }
+        
+        /* ===== ПАССИВНЫЙ ДОХОД ===== */
+        .passive-income {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            border-radius: 15px;
+            padding: 15px;
+            color: white;
+            margin-top: 20px;
+        }
+        
+        .timer {
+            font-size: 2em;
+            font-weight: 700;
+            text-align: center;
+            font-family: monospace;
+        }
+        
+        /* ===== ПОДВАЛ ===== */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: var(--text-color);
+            opacity: 0.7;
+        }
+        
+        /* ===== МОБИЛЬНАЯ ВЕРСИЯ ===== */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .logo h1 { font-size: 1.8em; }
+            .balance-amount { font-size: 2.5em; }
+            .btn { padding: 15px; font-size: 1em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- ШАПКА -->
+        <div class="header">
+            <div class="logo">
+                <h1>🏦 БОЛЬШАЯ ДЕНЕЖНАЯ ПОЛКА</h1>
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <span id="themeIcon">🌙</span> Тема
+            </button>
+        </div>
+        
+        <!-- ОСНОВНАЯ СЕТКА -->
+        <div class="dashboard">
+            <!-- КАРТОЧКА БАЛАНСА -->
+            <div class="card">
+                <div class="card-title">💰 ТВОИ ДЕНЬГИ</div>
+                <div class="balance-big">
+                    <div class="balance-label">Баланс</div>
+                    <div class="balance-amount" id="balanceDisplay">0 ₽</div>
+                    <div class="currency-selector">
+                        <button class="currency-btn active" onclick="setCurrency('RUB')">RUB</button>
+                        <button class="currency-btn" onclick="setCurrency('USD')">USD</button>
+                        <button class="currency-btn" onclick="setCurrency('EUR')">EUR</button>
+                    </div>
+                </div>
+                
+                <!-- БЫСТРЫЕ ДЕЙСТВИЯ -->
+                <div class="buttons-grid">
+                    <button class="btn btn-green" onclick="playSound(); addMoney(100)">
+                        <span>➕</span> 100 ₽
+                    </button>
+                    <button class="btn btn-green" onclick="playSound(); addMoney(500)">
+                        <span>➕</span> 500 ₽
+                    </button>
+                    <button class="btn btn-green" onclick="playSound(); addMoney(1000)">
+                        <span>➕</span> 1000 ₽
+                    </button>
+                    <button class="btn btn-green" onclick="playSound(); addMoney(5000)">
+                        <span>➕</span> 5000 ₽
+                    </button>
+                    <button class="btn btn-red" onclick="playSound(); withdrawMoney(100)">
+                        <span>➖</span> 100 ₽
+                    </button>
+                    <button class="btn btn-red" onclick="playSound(); withdrawMoney(500)">
+                        <span>➖</span> 500 ₽
+                    </button>
+                    <button class="btn btn-red" onclick="playSound(); withdrawMoney(1000)">
+                        <span>➖</span> 1000 ₽
+                    </button>
+                    <button class="btn btn-red" onclick="playSound(); withdrawMoney(5000)">
+                        <span>➖</span> 5000 ₽
+                    </button>
+                </div>
+                
+                <!-- ПОЛКА С ДЕНЬГАМИ (3D) -->
+                <div class="shelf-3d">
+                    <div class="shelf-content" id="moneyShelf"></div>
+                </div>
+                
+                <!-- СПЕЦИАЛЬНЫЕ КНОПКИ -->
+                <div class="buttons-grid">
+                    <button class="btn btn-orange btn-large" onclick="resetMoney()">
+                        <span>🔄</span> ОЧИСТИТЬ ПОЛКУ
+                    </button>
+                </div>
+            </div>
+            
+            <!-- КАРТОЧКА ЦЕЛИ И КОПИЛКИ -->
+            <div class="card">
+                <div class="card-title">🎯 МОЯ ЦЕЛЬ</div>
+                <div class="goal-progress">
+                    <div class="goal-info">
+                        <span>Накопить:</span>
+                        <span id="goalDisplay">0 / 10000 ₽</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="buttons-grid">
+                    <button class="btn btn-purple" onclick="setGoal(5000)">5000 ₽</button>
+                    <button class="btn btn-purple" onclick="setGoal(10000)">10000 ₽</button>
+                    <button class="btn btn-purple" onclick="setGoal(50000)">50000 ₽</button>
+                    <button class="btn btn-purple" onclick="setGoal(100000)">100000 ₽</button>
+                </div>
+                
+                <!-- ПАССИВНЫЙ ДОХОД -->
+                <div class="passive-income">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span>⚡ ПАССИВНЫЙ ДОХОД</span>
+                        <span id="passiveRate">1% в минуту</span>
+                    </div>
+                    <div class="timer" id="timer">01:00</div>
+                    <div style="text-align: center; margin-top: 10px;">
+                        <button class="btn btn-blue" style="padding: 10px 20px;" onclick="upgradePassive()">
+                            Улучшить (1000 ₽)
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- КОНВЕРТЕР ВАЛЮТ -->
+                <div style="margin-top: 20px;">
+                    <div class="card-title">💱 КОНВЕРТЕР</div>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" id="convertAmount" value="1000" style="flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color);">
+                        <select id="convertFrom" style="padding: 10px; border-radius: 10px; background: var(--card-bg); color: var(--text-color);">
+                            <option value="RUB">RUB</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                        </select>
+                        <span style="font-size: 1.5em;">→</span>
+                        <select id="convertTo" style="padding: 10px; border-radius: 10px; background: var(--card-bg); color: var(--text-color);">
+                            <option value="USD">USD</option>
+                            <option value="RUB">RUB</option>
+                            <option value="EUR">EUR</option>
+                        </select>
+                    </div>
+                    <div style="text-align: center; margin-top: 10px; font-size: 1.3em; font-weight: 700;" id="convertResult">
+                        0 USD
+                    </div>
+                    <button class="btn btn-blue" style="width: 100%; margin-top: 10px;" onclick="convertCurrency()">
+                        КОНВЕРТИРОВАТЬ
+                    </button>
+                </div>
+            </div>
+            
+            <!-- КАРТОЧКА ИСТОРИИ И СТАТИСТИКИ -->
+            <div class="card">
+                <div class="card-title">📊 АНАЛИТИКА</div>
+                
+                <!-- СТАТИСТИКА -->
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalAdded">0 ₽</div>
+                        <div class="stat-label">Всего добавлено</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalWithdrawn">0 ₽</div>
+                        <div class="stat-label">Всего выведено</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="operationsCount">0</div>
+                        <div class="stat-label">Операций</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="avgOperation">0 ₽</div>
+                        <div class="stat-label">Средний чек</div>
+                    </div>
+                </div>
+                
+                <!-- ГРАФИК РОСТА -->
+                <div style="margin: 20px 0;">
+                    <div class="card-title">📈 РОСТ КАПИТАЛА</div>
+                    <div class="chart-container" id="chartContainer">
+                        <!-- Бары графика будут добавляться через JS -->
+                    </div>
+                </div>
+                
+                <!-- ИСТОРИЯ ТРАНЗАКЦИЙ -->
+                <div class="card-title">📋 ИСТОРИЯ</div>
+                <div class="history-list" id="transactionList">
+                    <div class="history-item">Начни операции с деньгами!</div>
+                </div>
+                
+                <!-- ЭКСПОРТ/ИМПОРТ -->
+                <div class="buttons-grid" style="margin-top: 20px;">
+                    <button class="btn btn-blue" onclick="exportData()">💾 Сохранить</button>
+                    <button class="btn btn-orange" onclick="importData()">📂 Загрузить</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ПОДВАЛ -->
+        <div class="footer">
+            🚀 МЕГА ДЕНЕЖНАЯ ПОЛКА v2.0 | Твой личный банк | Данные сохраняются в браузере
+        </div>
+    </div>
+
+    <script>
+        // ===========================================
+        // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+        // ===========================================
+        let balance = 0;
+        let transactions = [];
+        let totalAdded = 0;
+        let totalWithdrawn = 0;
+        let operationsCount = 0;
+        let currentCurrency = 'RUB';
+        let goal = 10000;
+        let passiveLevel = 1;
+        let passiveInterval;
+        let timerSeconds = 60;
+        let chartData = [0,0,0,0,0,0,0];
+        
+        // Курсы валют (фиксированные для демо)
+        const exchangeRates = {
+            'RUB': 1,
+            'USD': 0.013,
+            'EUR': 0.012
+        };
+        
+        // ===========================================
+        // ЭЛЕМЕНТЫ DOM
+        // ===========================================
+        const balanceDisplay = document.getElementById('balanceDisplay');
+        const moneyShelf = document.getElementById('moneyShelf');
+        const transactionList = document.getElementById('transactionList');
+        const totalAddedEl = document.getElementById('totalAdded');
+        const totalWithdrawnEl = document.getElementById('totalWithdrawn');
+        const operationsCountEl = document.getElementById('operationsCount');
+        const avgOperationEl = document.getElementById('avgOperation');
+        const goalDisplay = document.getElementById('goalDisplay');
+        const progressFill = document.getElementById('progressFill');
+        const timerEl = document.getElementById('timer');
+        const passiveRateEl = document.getElementById('passiveRate');
+        
+        // ===========================================
+        // ЗВУКИ (используем Web Audio API)
+        // ===========================================
+        function playSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.1);
+            } catch(e) {
+                console.log('Звук не поддерживается');
+            }
+        }
+        
+        // ===========================================
+        // ТЕМА
+        // ===========================================
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            const icon = document.getElementById('themeIcon');
+            if(document.body.classList.contains('dark-theme')) {
+                icon.textContent = '☀️';
+            } else {
+                icon.textContent = '🌙';
+            }
+            saveData();
+        }
+        
+        // ===========================================
+        // ОБНОВЛЕНИЕ ПОЛКИ С ДЕНЬГАМИ
+        // ===========================================
+        function updateShelf() {
+            moneyShelf.innerHTML = '';
+            
+            if (balance === 0) {
+                moneyShelf.innerHTML = '<div style="color: #666; text-align: center; width: 100%; padding: 30px;">✨ Полка пуста. Нажми на кнопки чтобы добавить деньги!</div>';
+                return;
+            }
+            
+            // Создаем визуальные деньги (1 элемент = ~500₽)
+            const itemCount = Math.min(Math.ceil(balance / 500), 30);
+            
+            for (let i = 0; i < itemCount; i++) {
+                const moneyItem = document.createElement('div');
+                
+                // Разные типы денег
+                if (i % 5 === 0) {
+                    moneyItem.className = 'banknote banknote-coin';
+                    moneyItem.textContent = '🪙';
+                } else if (i % 3 === 0) {
+                    moneyItem.className = 'banknote banknote-1000';
+                    moneyItem.textContent = '1000₽';
+                } else if (i % 3 === 1) {
+                    moneyItem.className = 'banknote banknote-2000';
+                    moneyItem.textContent = '2000₽';
+                } else {
+                    moneyItem.className = 'banknote banknote-5000';
+                    moneyItem.textContent = '5000₽';
+                }
+                
+                // Добавляем случайный поворот
+                const rot = (Math.random() * 10 - 5).toFixed(1);
+                moneyItem.style.setProperty('--rot', rot + 'deg');
+                
+                moneyShelf.appendChild(moneyItem);
+            }
+            
+            // Если много денег, добавляем счетчик
+            if (balance > 15000) {
+                const counter = document.createElement('div');
+                counter.className = 'banknote banknote-100';
+                counter.textContent = `💰 x${Math.floor(balance/1000)}к`;
+                moneyShelf.appendChild(counter);
+            }
+        }
+        
+        // ===========================================
+        // РАБОТА С ДЕНЬГАМИ
+        // ===========================================
+        function addMoney(amount) {
+            balance += amount;
+            totalAdded += amount;
+            operationsCount++;
+            
+            transactions.unshift({
+                type: 'add',
+                amount: amount,
+                date: new Date().toLocaleString('ru-RU')
+            });
+            
+            updateChart();
+            updateAll();
+            playSound();
+        }
+        
+        function withdrawMoney(amount) {
+            if (balance >= amount) {
+                balance -= amount;
+                totalWithdrawn += amount;
+                operationsCount++;
+                
+                transactions.unshift({
+                    type: 'withdraw',
+                    amount: -amount,
+                    date: new Date().toLocaleString('ru-RU')
+                });
+                
+                updateChart();
+                updateAll();
+                playSound();
+            } else {
+                alert('❌ Недостаточно средств! Нужно еще ' + (amount - balance) + ' ₽');
+            }
+        }
+        
+        function resetMoney() {
+            if (confirm('⚠️ Точно очистить всю полку? Все деньги пропадут!')) {
+                balance = 0;
+                totalAdded = 0;
+                totalWithdrawn = 0;
+                operationsCount = 0;
+                transactions = [];
+                chartData = [0,0,0,0,0,0,0];
+                updateAll();
+                playSound();
+            }
+        }
+        
+        // ===========================================
+        // ВАЛЮТА
+        // ===========================================
+        function setCurrency(currency) {
+            currentCurrency = currency;
+            document.querySelectorAll('.currency-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            updateBalanceDisplay();
+        }
+        
+        function convertCurrency() {
+            const amount = parseFloat(document.getElementById('convertAmount').value) || 0;
+            const from = document.getElementById('convertFrom').value;
+            const to = document.getElementById('convertTo').value;
+            
+            const inRUB = amount / exchangeRates[from];
+            const result = inRUB * exchangeRates[to];
+            
+            document.getElementById('convertResult').textContent = 
+                result.toFixed(2) + ' ' + to;
+        }
+        
+        // ===========================================
+        // ЦЕЛИ
+        // ===========================================
+        function setGoal(newGoal) {
+            goal = newGoal;
+            updateGoal();
+        }
+        
+        function updateGoal() {
+            const progress = Math.min((balance / goal) * 100, 100);
+            goalDisplay.textContent = `${balance.toLocaleString()} / ${goal.toLocaleString()} ₽`;
+            progressFill.style.width = progress + '%';
+        }
+        
+        // ===========================================
+        // ПАССИВНЫЙ ДОХОД
+        // ===========================================
+        function startPassiveIncome() {
+            if (passiveInterval) clearInterval(passiveInterval);
+            
+            passiveInterval = setInterval(() => {
+                timerSeconds--;
+                if (timerSeconds <= 0) {
+                    // Начисляем процент
+                    const income = Math.floor(balance * (0.01 * passiveLevel));
+                    addMoney(income);
+                    timerSeconds = 60;
+                    
+                    // Показываем уведомление
+                    alert(`✨ Получен пассивный доход: +${income} ₽`);
+                }
+                
+                const mins = Math.floor(timerSeconds / 60);
+                const secs = timerSeconds % 60;
+                timerEl.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+        
+        function upgradePassive() {
+            const cost = 1000 * passiveLevel;
+            if (balance >= cost) {
+                balance -= cost;
+                passiveLevel++;
+                passiveRateEl.textContent = passiveLevel + '% в минуту';
+                updateAll();
+                alert(`✅ Уровень пассивного дохода повышен до ${passiveLevel}%!`);
+            } else {
+                alert(`❌ Нужно еще ${cost - balance} ₽ для улучшения`);
+            }
+        }
+        
+        // ===========================================
+        // ГРАФИК
+        // ===========================================
+        function updateChart() {
+            // Сдвигаем данные
+            chartData.shift();
+            chartData.push(balance);
+            
+            const container = document.getElementById('chartContainer');
+            container.innerHTML = '';
+            
+            const maxValue = Math.max(...chartData, 1);
+            
+            chartData.forEach((value, index) => {
+                const bar = document.createElement('div');
+                bar.className = 'chart-bar';
+                const height = (value / maxValue) * 100;
+                bar.style.height = height + '%';
+                bar.setAttribute('data-value', (value/1000).toFixed(1) + 'k');
+                container.appendChild(bar);
+            });
+        }
+        
+        // ===========================================
+        // ОБНОВЛЕНИЕ ИНТЕРФЕЙСА
+        // ===========================================
+        function updateBalanceDisplay() {
+            let displayAmount = balance;
+            let symbol = '₽';
+            
+            if (currentCurrency === 'USD') {
+                displayAmount = balance * 0.013;
+                symbol = '$';
+            } else if (currentCurrency === 'EUR') {
+                displayAmount = balance * 0.012;
+                symbol = '€';
+            }
+            
+            balanceDisplay.textContent = displayAmount.toFixed(2) + ' ' + symbol;
+        }
+        
+        function updateStats() {
+            totalAddedEl.textContent = totalAdded.toLocaleString() + ' ₽';
+            totalWithdrawnEl.textContent = totalWithdrawn.toLocaleString() + ' ₽';
+            operationsCountEl.textContent = operationsCount;
+            
+            const avg = operationsCount > 0 ? Math.abs(totalAdded - totalWithdrawn) / operationsCount : 0;
+            avgOperationEl.textContent = avg.toFixed(0) + ' ₽';
+        }
+        
+        function updateHistory() {
+            if (transactions.length === 0) {
+                transactionList.innerHTML = '<div class="history-item">📌 История пуста. Совершите операцию!</div>';
+                return;
+            }
+            
+            transactionList.innerHTML = transactions.slice(0, 10).map(t => {
+                const className = t.amount > 0 ? 'profit' : 'loss';
+                const sign = t.amount > 0 ? '+' : '';
+                return `<div class="history-item">
+                    <span class="${className}">${sign}${t.amount} ₽</span>
+                    <span style="font-size: 0.8em;">${t.date}</span>
+                </div>`;
+            }).join('');
+        }
+        
+        function updateAll() {
+            updateBalanceDisplay();
+            updateShelf();
+            updateStats();
+            updateHistory();
+            updateGoal();
+            saveData();
+        }
+        
+        // ===========================================
+        // СОХРАНЕНИЕ ДАННЫХ
+        // ===========================================
+        function saveData() {
+            const data = {
+                balance,
+                transactions: transactions.slice(0, 50),
+                totalAdded,
+                totalWithdrawn,
+                operationsCount,
+                passiveLevel,
+                goal,
+                chartData,
+                theme: document.body.classList.contains('dark-theme')
+            };
+            localStorage.setItem('bigMoneyShelf', JSON.stringify(data));
+        }
+        
+        function loadData() {
+            const saved = localStorage.getItem('bigMoneyShelf');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    balance = data.balance || 0;
+                    transactions = data.transactions || [];
+                    totalAdded = data.totalAdded || 0;
+                    totalWithdrawn = data.totalWithdrawn || 0;
+                    operationsCount = data.operationsCount || 0;
+                    passiveLevel = data.passiveLevel || 1;
+                    goal = data.goal || 10000;
+                    chartData = data.chartData || [0,0,0,0,0,0,0];
+                    
+                    if (data.theme) {
+                        document.body.classList.add('dark-theme');
+                        document.getElementById('themeIcon').textContent = '☀️';
+                    }
+                } catch(e) {
+                    console.log('Ошибка загрузки');
+                }
+            }
+            
+            passiveRateEl.textContent = passiveLevel + '% в минуту';
+            updateAll();
+            updateChart();
+        }
+        
+        // ===========================================
+        // ЭКСПОРТ/ИМПОРТ
+        // ===========================================
+        function exportData() {
+            const dataStr = JSON.stringify(localStorage.getItem('bigMoneyShelf'));
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'money_shelf_backup.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            alert('✅ Данные сохранены в файл!');
+        }
+        
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = readerEvent => {
+                    try {
+                        const content = readerEvent.target.result;
+                        localStorage.setItem('bigMoneyShelf', content);
+                        loadData();
+                        alert('✅ Данные восстановлены!');
+                    } catch(e) {
+                        alert('❌ Ошибка загрузки файла');
+                    }
+                };
+                
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+        
+        // ===========================================
+        // ИНИЦИАЛИЗАЦИЯ
+        // ===========================================
+        window.onload = function() {
+            loadData();
+            startPassiveIncome();
+            updateChart();
+        };
+    </script>
+</body>
+</html>
